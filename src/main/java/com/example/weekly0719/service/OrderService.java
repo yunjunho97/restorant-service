@@ -54,14 +54,19 @@ public class OrderService {
     public Optional<OrderDTO> updateOrder(Long id, OrderDTO orderDTO) {
         Order order = orderRepository.findById(id).orElseThrow(EntityNotFoundException::new);
         order.getOrderItems().clear();
-//        orderRepository.saveAndFlush(order);
-//        entityManager.clear();
         order.setTotalPrice(0L);
         for(OrderItemDTO orderItemDTO : orderDTO.getOrderItems()) {
             OrderItem orderItem = convertToOrderItemEntity(orderItemDTO);
             order.setTotalPrice(order.getTotalPrice() + orderItem.getPrice());
             order.addOrderItem(orderItem);
         }
+        orderRepository.save(order);
+        return Optional.of(convertToOrderDTO(order));
+    }
+
+    public Optional<OrderDTO> updateStateOrder(Long id, OrderDTO orderDTO) {
+        Order order = orderRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        order.setStatus(orderDTO.getStatus());
         orderRepository.save(order);
         return Optional.of(convertToOrderDTO(order));
     }

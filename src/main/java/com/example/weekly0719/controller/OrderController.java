@@ -38,6 +38,13 @@ public class OrderController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/{id}/status")
+    public ResponseEntity<OrderDTO> updateOrderStatus(@PathVariable Long id, @RequestBody OrderDTO orderDTO) {
+        return orderService.updateStateOrder(id, orderDTO)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
         orderService.deleteOrder(id);
