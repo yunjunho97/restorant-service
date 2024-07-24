@@ -1,6 +1,7 @@
 package com.example.weekly0719.controller;
 
 import com.example.weekly0719.model.OrderDTO;
+import com.example.weekly0719.model.OrderItem;
 import com.example.weekly0719.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,13 @@ public class OrderController {
     public ResponseEntity<OrderDTO> createOrder(@RequestBody OrderDTO orderDTO) {
         OrderDTO createdOrderDTO = orderService.createOrder(orderDTO);
         return ResponseEntity.ok(createdOrderDTO);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<OrderDTO> updateOrder(@PathVariable Long id, @RequestBody OrderDTO orderDTO) {
+        return orderService.updateOrder(id, orderDTO)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")

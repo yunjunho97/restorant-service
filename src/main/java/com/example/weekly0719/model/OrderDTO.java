@@ -15,4 +15,5 @@ public class OrderDTO {
     private String status;
     private Long totalPrice = 0L;
     private List<OrderItemDTO> orderItems;
+    private Long customerId;
 }

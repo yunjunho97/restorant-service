@@ -6,6 +6,7 @@ import com.example.weekly0719.repository.MenuRepository;
 import com.example.weekly0719.repository.OrderItemRepository;
 import com.example.weekly0719.repository.OrderRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,12 +17,16 @@ import java.util.stream.Collectors;
 @Service
 public class OrderService {
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final MenuService menuService;
+    private final CustomerService customerService;
 
     @Autowired
-    public OrderService(OrderRepository orderRepository, MenuService menuService) {
+    public OrderService(OrderRepository orderRepository, MenuService menuService, CustomerService customerService, OrderItemRepository orderItemRepository) {
         this.orderRepository = orderRepository;
         this.menuService = menuService;
+        this.customerService = customerService;
+        this.orderItemRepository = orderItemRepository;
     }
 
     public List<OrderDTO> getAllOrder() {
@@ -33,10 +38,36 @@ public class OrderService {
 
     public OrderDTO createOrder(OrderDTO orderDTO) {
         Order order = convertToOrderEntity(orderDTO);
+//        Customer customer = customerService.getCustomerById(orderDTO.getCustomerId())
+//                .map(CustomerDTO::toEntity)
+//                .orElseThrow(EntityNotFoundException::new);
+//        customer.addOrder(order);
         return convertToOrderDTO(orderRepository.save(order));
     }
 
+    public Optional<OrderDTO> getOrderById(Long id) {
+        return orderRepository.findById(id)
+                .map(this::convertToOrderDTO);
+    }
+
+    @Transactional
+    public Optional<OrderDTO> updateOrder(Long id, OrderDTO orderDTO) {
+        Order order = orderRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        order.getOrderItems().clear();
+//        orderRepository.saveAndFlush(order);
+//        entityManager.clear();
+        order.setTotalPrice(0L);
+        for(OrderItemDTO orderItemDTO : orderDTO.getOrderItems()) {
+            OrderItem orderItem = convertToOrderItemEntity(orderItemDTO);
+            order.setTotalPrice(order.getTotalPrice() + orderItem.getPrice());
+            order.addOrderItem(orderItem);
+        }
+        orderRepository.save(order);
+        return Optional.of(convertToOrderDTO(order));
+    }
+
     public void deleteOrder(Long orderId) {
+        //
         orderRepository.deleteById(orderId);
     }
 
@@ -44,7 +75,7 @@ public class OrderService {
         Order order = new Order();
         order.setId(orderDTO.getId());
         order.setStatus(orderDTO.getStatus());
-        order.setTotalPrice(orderDTO.getTotalPrice());
+        order.setTotalPrice(0L);
         if(orderDTO.getOrderItems() != null){
             orderDTO.getOrderItems().forEach(orderItemDTO -> {
                 OrderItem orderItem = this.convertToOrderItemEntity(orderItemDTO);
@@ -52,6 +83,10 @@ public class OrderService {
                 order.addOrderItem(orderItem);
             });
         }
+//        Customer customer = customerService.getCustomerById(orderDTO.getCustomerId())
+//                .map(CustomerDTO::toEntity)
+//                .orElseThrow(EntityNotFoundException::new);
+//        customer.addOrder(order);
         return order;
     }
 
